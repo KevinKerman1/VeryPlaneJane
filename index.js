@@ -13,7 +13,7 @@ const port = 3000;
 const upload = multer({ dest: 'uploads/' });
 
 // Route to handle PDF to image conversion
-app.post('/convert-pdf', upload.single('PDF'), async (req, res) => {
+app.post('/convert-pdf', upload.single('data'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).send({ message: 'No PDF file provided!' });
