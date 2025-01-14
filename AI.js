@@ -66,7 +66,8 @@ export async function sendToOpenAI(base64Images, res) {
                         Notes:
                         1. If the document cannot be identified, set "DocumentType" to "Unidentifiable".
                         2. If no identifier can be extracted, set "Identifier" to null.
-                        3. Ensure the response follows the exact JSON format.`,
+                        3. Ensure the response follows the exact JSON format.
+                        4. If an estimate was written by the company "AdjustPro Solutions LLC" set "DocumentType" to "Estimate", if the estimate was not written by "AdjustPro Solutions LLC" (It was instead written by for example, state farm, farmers, travlers...) set "DocumentType" to "Scope"`,
                 },
                 ...imageMessages,
               ],
