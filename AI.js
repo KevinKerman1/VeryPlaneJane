@@ -60,6 +60,7 @@ export async function sendToOpenAI(base64Images, res) {
                                 "InsuredPhone": "<Phone Number of the Insured if available>",
                                 "InsuredEmail": "<Email of the Insured if available>",
                                 "LossLocationAddress": "<Loss Location Address if available>"
+                                "Carrier": "<Carrier/Insurance Company Name if available>"
                             }
                         }
 
