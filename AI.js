@@ -29,6 +29,7 @@ const DocumentSchema = z.object({
         InsuredPhone: z.string().nullable().optional().default(null),
         InsuredEmail: z.string().nullable().optional().default(null),
         LossLocationAddress: z.string().nullable().optional().default(null),
+        Carrier: z.string().nullable().optional().default(null),
     }).nullable(),
 });
 
