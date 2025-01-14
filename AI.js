@@ -40,7 +40,7 @@ export async function sendToOpenAI(base64Images, res) {
         }));
 
         const response = await client.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4o-mini",
             temperature: 0.1,
             messages: [
                 {
