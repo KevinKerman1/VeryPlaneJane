@@ -41,7 +41,7 @@ export async function sendToOpenAI(base64Images, res) {
         }));
 
         const response = await client.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             temperature: 0.1,
             messages: [
                 {
@@ -49,7 +49,11 @@ export async function sendToOpenAI(base64Images, res) {
                     content: [
                       {
                         type: "text",
-                        text: `Classify the type of document and extract a unique identifier if possible. 
+                        text: `
+                        Begin by only analyzing the first two pages of the document. If you are able to identify the document type and extract at least 4 of the 7 identifiers do not analyze the rest of the document and instead generate your response and stop. If you are unable to identify the document type or extract at least 4 of the 7 identifiers, analyze the 3rd page of the document. If you are still unable to meet the requirements move to the 4th page and so on until you reach the 10th page. If you are still unable to identify the document type or extract at least 4 of the 7 identifiers, then generate your response and stop.
+                        
+                        
+                        Classify the type of document and extract a unique identifier if possible. 
                         Respond in the following structured JSON format:
 
                         {
@@ -70,7 +74,7 @@ export async function sendToOpenAI(base64Images, res) {
                         2. If no identifier can be extracted, set "Identifier" to null.
                         3. Ensure the response follows the exact JSON format.
                         4. If an estimate was written by the company "AdjustPro Solutions LLC" set "DocumentType" to "Estimate", if the estimate was not written by "AdjustPro Solutions LLC" (It was instead written by for example, state farm, farmers, travlers...) set "DocumentType" to "Scope"
-                        5. Begin by only analyzing the first two pages of the document. If you are able to identify the document type and extract the any of the 4 identifiers, do not analyze the rest of the document. If you are unable to identify the document type or extract at least 5 identifiers, analyze the rest of the document.
+                        
                         6. Note that if you identify a document as a "Eagle view" or "Quick Measure" the only Identifier you should extract is the "Loss Location Address".
                         7. The goal is to also be fast and efficient so make sure to only analyze the document as much as you need to in order to identify the document type and extract the identifiers.`,
                 },
