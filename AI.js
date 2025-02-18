@@ -41,47 +41,42 @@ export async function sendToOpenAI(base64Images, res) {
         }));
 
         const response = await client.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             temperature: 0.1,
             messages: [
                 {
-                    type: "text",
-                    text: `Classify the document type and extract the required unique identifier(s) from the document images provided.
-You will receive an ordered list of page images (first image is page 1, second image is page 2, etc.). Begin by analyzing the first page, and if needed, the second page to determine the document type and extract the relevant data points.
+                    role: "user",
+                    content: [
+                      {
+                        type: "text",
+                        text: `Classify the type of document and extract a unique identifier if possible. 
+                        Respond in the following structured JSON format:
 
-For each document type, extract only the following data points:
-- Scope: PolicyNumber, ClaimNumber, InsuredName, InsuredPhone, InsuredEmail, LossLocationAddress, Carrier.
-- Estimate: PolicyNumber, ClaimNumber, InsuredName, InsuredPhone, InsuredEmail, LossLocationAddress, Carrier.
-- Quick Measure: LossLocationAddress.
-- Eagle view: LossLocationAddress.
-- Check: ClaimNumber.
-- Correspondence: ClaimNumber, PolicyNumber.
-- Intake: PolicyNumber, ClaimNumber, InsuredName, InsuredPhone, InsuredEmail, LossLocationAddress, Carrier.
+                        {
+                            "DocumentType": "<One of: Scope, Estimate, Quick Measure, Eagle view, Check, Correspondence, Image, Intake, Unidentifiable>",
+                            "Identifier": {
+                                "PolicyNumber": "<Policy Number if available>",
+                                "ClaimNumber": "<Claim Number if available>",
+                                "InsuredName": "<Name of the Insured if available>",
+                                "InsuredPhone": "<Phone Number of the Insured if available>",
+                                "InsuredEmail": "<Email of the Insured if available>",
+                                "LossLocationAddress": "<Loss Location Address if available>"
+                                "Carrier": "<Carrier/Insurance Company Name if available>"
+                            }
+                        }
 
-Once you have identified the document type and extracted all required data points from the first two pages, immediately respond with the structured JSON (without analyzing any remaining pages). Only if the necessary data points are missing should you proceed to examine additional pages.
-
-Additional notes:
-1. If the document is an estimate written by "AdjustPro Solutions LLC", set "DocumentType" to "Estimate". If it is written by another company (e.g., State Farm, Farmers, Travelers, etc.), set it to "Scope".
-2. If no unique identifier can be extracted, set "Identifier" to null.
-3. If the document cannot be classified, set "DocumentType" to "Unidentifiable".
-4. Strictly adhere to the JSON format provided below.
-
-Respond exactly in the following JSON format:
-
-{
-    "DocumentType": "<One of: Scope, Estimate, Quick Measure, Eagle view, Check, Correspondence, Image, Intake, Unidentifiable>",
-    "Identifier": {
-        "PolicyNumber": "<Policy Number if available>",
-        "ClaimNumber": "<Claim Number if available>",
-        "InsuredName": "<Insured Name if available>",
-        "InsuredPhone": "<Insured Phone if available>",
-        "InsuredEmail": "<Insured Email if available>",
-        "LossLocationAddress": "<Loss Location Address if available>",
-        "Carrier": "<Carrier if available>"
-    }
-}`
+                        Notes:
+                        1. If the document cannot be identified, set "DocumentType" to "Unidentifiable".
+                        2. If no identifier can be extracted, set "Identifier" to null.
+                        3. Ensure the response follows the exact JSON format.
+                        4. If an estimate was written by the company "AdjustPro Solutions LLC" set "DocumentType" to "Estimate", if the estimate was not written by "AdjustPro Solutions LLC" (It was instead written by for example, state farm, farmers, travlers...) set "DocumentType" to "Scope"
+                        5. Begin by only analyzing the first two pages of the document. If you are able to identify the document type and extract the any of the 4 identifiers, do not analyze the rest of the document. If you are unable to identify the document type or extract at least 5 identifiers, analyze the rest of the document.
+                        6. Note that if you identify a document as a "Eagle view" or "Quick Measure" the only Identifier you should extract is the "Loss Location Address".
+                        7. The goal is to also be fast and efficient so make sure to only analyze the document as much as you need to in order to identify the document type and extract the identifiers.`,
                 },
                 ...imageMessages,
+              ],
+            },
             ],
         });
 
