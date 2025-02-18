@@ -9,12 +9,13 @@ const client = new OpenAI({
     apiKey: process.env.OpenAI_API_KEY,
 });
 
+// Define the expected response structure using zod
 const DocumentSchema = z.object({
     DocumentType: z.enum([
         "Scope",
         "Estimate",
         "Quick Measure",
-        "Eagle View",
+        "Eagle view",
         "Check",
         "Correspondence",
         "Image",
@@ -44,48 +45,54 @@ export async function sendToOpenAI(base64Images, res) {
             temperature: 0.1,
             messages: [
                 {
-                    role: "user",
-                    content: [
-                        {
-                            type: "text",
-                            text: `Follow these steps to analyze insurance documents efficiently:
+                    type: "text",
+                    text: `Classify the document type and extract the required unique identifier(s) from the document images provided.
+You will receive an ordered list of page images (first image is page 1, second image is page 2, etc.). Begin by analyzing the first page, and if needed, the second page to determine the document type and extract the relevant data points.
 
-1. DOCUMENT CLASSIFICATION:
-- Analyze ONLY the first two pages to determine DocumentType
-- Special Rule: Estimates from 'AdjustPro Solutions LLC' = 'Estimate', others = 'Scope'
+For each document type, extract only the following data points:
+- Scope: PolicyNumber, ClaimNumber, InsuredName, InsuredPhone, InsuredEmail, LossLocationAddress, Carrier.
+- Estimate: PolicyNumber, ClaimNumber, InsuredName, InsuredPhone, InsuredEmail, LossLocationAddress, Carrier.
+- Quick Measure: LossLocationAddress.
+- Eagle view: LossLocationAddress.
+- Check: ClaimNumber.
+- Correspondence: ClaimNumber, PolicyNumber.
+- Intake: PolicyNumber, ClaimNumber, InsuredName, InsuredPhone, InsuredEmail, LossLocationAddress, Carrier.
 
-2. FIELD EXTRACTION RULES:
-• Scope/Estimate/Intake: ALL fields
-• Quick Measure/Eagle View: ONLY LossLocationAddress
-• Check: ONLY ClaimNumber
-• Correspondence: ClaimNumber + PolicyNumber
+Once you have identified the document type and extracted all required data points from the first two pages, immediately respond with the structured JSON (without analyzing any remaining pages). Only if the necessary data points are missing should you proceed to examine additional pages.
 
-3. PROCESSING LOGIC:
-- STOP analyzing after finding all required fields for DocumentType
-- If needed, continue past page 2 ONLY for missing required fields
-- Never process more pages than necessary
+Additional notes:
+1. If the document is an estimate written by "AdjustPro Solutions LLC", set "DocumentType" to "Estimate". If it is written by another company (e.g., State Farm, Farmers, Travelers, etc.), set it to "Scope".
+2. If no unique identifier can be extracted, set "Identifier" to null.
+3. If the document cannot be classified, set "DocumentType" to "Unidentifiable".
+4. Strictly adhere to the JSON format provided below.
 
-4. OUTPUT REQUIREMENTS:
-- Exclude null/missing fields from JSON
-- Strictly follow DocumentType field requirements
+Respond exactly in the following JSON format:
 
-Respond with this exact JSON structure:
 {
-    "DocumentType": "...",
-    "Identifier": { ... } // ONLY include relevant fields
+    "DocumentType": "<One of: Scope, Estimate, Quick Measure, Eagle view, Check, Correspondence, Image, Intake, Unidentifiable>",
+    "Identifier": {
+        "PolicyNumber": "<Policy Number if available>",
+        "ClaimNumber": "<Claim Number if available>",
+        "InsuredName": "<Insured Name if available>",
+        "InsuredPhone": "<Insured Phone if available>",
+        "InsuredEmail": "<Insured Email if available>",
+        "LossLocationAddress": "<Loss Location Address if available>",
+        "Carrier": "<Carrier if available>"
+    }
 }`
-                        },
-                        ...imageMessages,
-                    ],
                 },
+                ...imageMessages,
             ],
         });
 
+        // Clean up response content to ensure it's valid JSON
         const rawContent = response.choices[0].message.content;
-        const cleanedContent = rawContent.replace(/```json|```/g, '');
-        const data = JSON.parse(cleanedContent);
+        const cleanedContent = rawContent.replace(/```json|```/g, ''); // Remove ```json and ``` markers
+
+        const data = JSON.parse(cleanedContent); // Parse the cleaned JSON response
+
+        // Validate against the schema
         const parsedData = DocumentSchema.parse(data);
-        
         res.json(parsedData);
 
     } catch (error) {
