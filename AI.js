@@ -20,6 +20,7 @@ const DocumentSchema = z.object({
         "Correspondence",
         "Image",
         "Intake",
+        "Letter Of Representation",
         "Unidentifiable",
     ]),
     Identifier: z.object({
@@ -57,7 +58,7 @@ export async function sendToOpenAI(base64Images, res) {
                         Respond in the following structured JSON format:
 
                         {
-                            "DocumentType": "<One of: Scope, Estimate, Quick Measure, Eagle view, Check, Correspondence, Image, Intake, Unidentifiable>",
+                            "DocumentType": "<One of: Scope, Estimate, Quick Measure, Eagle view, Check, Correspondence, Image, Intake, Letter Of Representation, Unidentifiable>",
                             "Identifier": {
                                 "PolicyNumber": "<Policy Number if available>",
                                 "ClaimNumber": "<Claim Number if available>",
